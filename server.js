@@ -49,30 +49,53 @@ async function run() {
 
     //get all Booked packages
     app.get("/bookedPackage", async (req, res) => {
-      const result = await BookedPackageCollections.find({}).toArray();
+      const searchedEmail = req.query.email;
+      // console.log(searchedEmail);
+      const query = { email: searchedEmail };
+      // console.log(query);
+      let result;
+      if (searchedEmail) {
+        result = await BookedPackageCollections.find(query).toArray();
+        console.log("got");
+      } else {
+        result = await BookedPackageCollections.find({}).toArray();
+        console.log("no have");
+      }
+      // console.log(result);
       res.send(result);
     });
-    //get current user packages by email
-    app.get("/bookedPackage/:email", async (req, res) => {
-      const email = req.params.email;
-      // console.log("email", email);
-      const query = { email: email };
-      const result = await BookedPackageCollections.find(query).toArray();
+    //get current user packages by id
+    app.get("/bookedPackage/:id", async (req, res) => {
+      // console.log(req.params);
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await BookedPackageCollections.findOne(query);
       res.send(result);
     });
-    //get current user by using id
-    /*   app.put("/bookedPackage/:id", async (req, res) => {
-      // const id = req.query.id;
-      // console.log(req.id);
-      // const query = { _id: ObjectId(id) };
-      // const result = await BookedPackageCollections.find(query).toArray();
-      // res.send(result);
-    }); */
     //add booked Package
     app.post("/bookedPackage", async (req, res) => {
       const doc = req.body;
       const result = await BookedPackageCollections.insertOne(doc);
       res.send(result);
+    });
+    //update booked single package
+    app.put("/bookedPackage/:id", async (req, res) => {
+      const doc = req.body;
+      const updateDoc = {
+        $set: {
+          status: doc.status,
+        },
+      };
+      const id = req.params.id;
+
+      const filter = { _id: ObjectId(id) };
+      const options = { upset: true };
+      const result = await BookedPackageCollections.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.json(result);
     });
     //delete item from booked packages
     app.delete("/bookedPackage/:id", async (req, res) => {
